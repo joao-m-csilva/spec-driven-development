@@ -19,11 +19,11 @@ Global instructions for AI coding agents working in any project under this direc
 
 ---
 
-## 2. Commits — One Commit per File
+## 2. Commits & Pull Requests — One Commit per File
 
 **Every changed file gets its own commit.** Never bundle multiple files into one commit.
 
-### Rules
+### Commit Rules
 1. Stage and commit files individually:
    ```bash
    git add path/to/file.ts
@@ -54,6 +54,14 @@ Global instructions for AI coding agents working in any project under this direc
 7. Never `git push --force` to shared branches, rewrite published history, or push without being asked.
 8. Work on a feature branch (`feat/<short-name>`, `fix/<short-name>`) — never commit directly to `main`/`master` unless instructed.
 
+### Pull Request Rules
+1. **When to open:** Push the feature branch and open a Pull Request (using `gh pr create --base main --head <branch>`) only after all tests, linters, and build checks pass, and when requested or authorized by the user.
+2. **PR Title:** Must follow **Conventional Commits** in English (`<type>(<scope>): <short imperative summary>`).
+3. **PR Description:** Must be written in English, strictly technical (no emojis, no marketing clichés), and structured with three sections:
+   - `## Summary` — Concise explanation of *what* was implemented or fixed and *why*.
+   - `## Key Changes` — Bulleted breakdown of architectural and file-level changes grouped by module.
+   - `## Verification` — Exact test, typecheck, lint, and build commands executed along with their pass results.
+
 ---
 
 ## 3. Testing — Every New Function Has a Test
@@ -73,10 +81,10 @@ Use the framework already in the project. If none exists, default to:
 | Go                    | `testing` package                  | `<file>_test.go`                      |
 
 ### What a test must cover
-- ✅ **Happy path** — expected input produces expected output.
-- ✅ **Edge cases** — empty, null/undefined, boundaries, large inputs.
-- ✅ **Error cases** — invalid input throws/returns the correct error.
-- ✅ **Security cases for APIs** — unauthenticated (401), unauthorized (403), rate-limited (429), invalid payload (400/422).
+- **Happy path** — expected input produces expected output.
+- **Edge cases** — empty, null/undefined, boundaries, large inputs.
+- **Error cases** — invalid input throws/returns the correct error.
+- **Security cases for APIs** — unauthenticated (401), unauthorized (403), rate-limited (429), invalid payload (400/422).
 
 ### Test quality rules
 - Follow **Arrange → Act → Assert**.
@@ -144,7 +152,32 @@ Use the framework already in the project. If none exists, default to:
 
 ---
 
-## 6. Dependencies
+## 6. Documentation & README Standards
+
+Project documentation must be written as sober, technical engineering reference material.
+
+### 6.1 Language Policy (Single-File Bilingual: EN-US Top + PT-BR Bottom)
+- **Single `README.md` file:** Do not create separate language files (such as `README.pt-BR.md`). Keep both languages inside `README.md`.
+- **Top Section (`en-US` Default):** The file starts with `<a id="en-us"></a>`, the project title, a language anchor link (`Language: **English (en-US)** | [Português (pt-BR)](#pt-br)`), and the full documentation in **English (`en-US`)**.
+- **Bottom Section (`pt-BR` Companion):** Separated by a horizontal rule (`---`), followed by `<a id="pt-br"></a>`, the project title, a back-to-top anchor link (`Idioma: [English (en-US)](#en-us) | **Português (pt-BR)**`), and the complete synchronized documentation in **Brazilian Portuguese (`pt-BR`)**.
+
+### 6.2 Style & Anti-"AI-ification" Rules
+- **No emojis:** Never use emojis in headings, bullet points, tables, or prose inside `README.md`, `AGENTS.md`, or technical docs.
+- **No marketing fluff or AI clichés:** Avoid empty adjectives and promotional phrasing ("blazingly fast", "seamless", "cutting-edge", "robust", "modern", "effortless"). State facts, constraints, and behavior directly.
+- **High signal-to-noise ratio:** Prefer structured tables, exact file paths, and copy-pasteable shell commands over long narrative explanations.
+
+### 6.3 Required README Structure
+Both the `en-US` and `pt-BR` sections inside `README.md` must cover these subsections in order:
+1. **Title, Language Switcher & Overview:** Factual summary of what the system does and the problem it solves.
+2. **Tech Stack & Architecture:** Runtime, frameworks, libraries, and directory structure with module responsibilities.
+3. **Prerequisites & Environment Variables:** Required tool versions and a reference table documenting every variable in `.env.example` (Variable, Required, Default, Description).
+4. **Setup, Development & Verification Commands:** Exact commands for installation, local development, test execution, type checking, linting, and production build.
+5. **Database & API Specification (if applicable):** Migration files, schema overview, endpoints, authentication method, rate limits, and response status codes.
+6. **Deployment:** Concrete steps required to deploy and configure the application in production.
+
+---
+
+## 7. Dependencies
 
 - Prefer the standard library and existing dependencies.
 - Before adding a package: confirm it is maintained, widely used, and license-compatible — and ask the user.
@@ -152,7 +185,7 @@ Use the framework already in the project. If none exists, default to:
 
 ---
 
-## 7. Agent Workflow
+## 8. Agent Workflow
 
 1. **Explore** — read related files, tests, and project-level `AGENTS.md` / README.
 2. **Plan** — for non-trivial tasks, outline the steps and affected files before coding.
@@ -170,7 +203,7 @@ Use the framework already in the project. If none exists, default to:
 
 ---
 
-## 8. Project-Specific Overrides
+## 9. Project-Specific Overrides
 
 Each project should provide its own `AGENTS.md` with:
 - **Stack & versions** (e.g. Node 20, Next.js 15, Python 3.12, Java 21, .NET 8)
