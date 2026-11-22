@@ -12,187 +12,140 @@ Global instructions for AI coding agents working in any project under this direc
 
 - **Understand before changing.** Read the relevant code, README, and existing tests before editing.
 - **Follow existing conventions.** Match the project's style, structure, naming, and libraries. Do not introduce a new framework, dependency, or pattern without asking.
-- **Small, focused changes.** Do only what was requested. No unrelated refactors or "drive-by" fixes — mention them instead.
-- **Never break the build.** Code must compile, lint, and pass all tests before every commit.
+- **Small, focused changes.** Do only what was requested. No unrelated refactors or drive-by fixes; mention them in the report instead.
+- **Never break the build.** Every commit must compile, lint, and pass the test suite.
 - **Ask when unsure.** If requirements are ambiguous or a change is destructive, stop and ask.
-- **Preserve documentation.** Keep existing comments and docstrings unless they become incorrect due to your change.
+- **Preserve documentation.** Keep existing comments and docstrings unless your change makes them incorrect.
 
 ---
 
-## 2. Commits & Pull Requests — One Commit per File
-
-**Every changed file gets its own commit.** Never bundle multiple files into one commit.
+## 2. Commits & Pull Requests
 
 ### Commit Rules
-1. Stage and commit files individually:
-   ```bash
-   git add path/to/file.ts
-   git commit -m "feat(auth): add token validation helper"
-   ```
-2. Use **[Conventional Commits](https://www.conventionalcommits.org/)**:
+1. **One commit per logical change.** A logical change is the smallest set of files that builds and passes tests together (for example, a function and its test, or a rename and all its call sites). Do not bundle unrelated changes, and do not split a change in a way that leaves any commit failing.
+2. Stage files explicitly (`git add <path>`); never `git add .` or `git add -A`.
+3. Use **[Conventional Commits](https://www.conventionalcommits.org/)**:
    ```
    <type>(<scope>): <short imperative summary, max 72 chars>
 
    [optional body: what and WHY, not how]
    ```
-   | Type       | Use for                                   |
-   |------------|-------------------------------------------|
-   | `feat`     | New feature / function                    |
-   | `fix`      | Bug fix                                   |
-   | `test`     | Adding or updating tests                  |
-   | `refactor` | Code change with no behavior change       |
-   | `docs`     | Documentation only                        |
-   | `style`    | Formatting, no logic change               |
-   | `perf`     | Performance improvement                   |
-   | `chore`    | Tooling, config, dependencies             |
-   | `ci`       | CI/CD pipeline changes                    |
-   | `security` | Security hardening                        |
-3. **Commit order:** implementation file first, then its test file, so history stays readable (`feat: ...` → `test: ...`).
-4. Each commit message must describe the change *in that file* specifically.
-5. **Allowed exceptions** (files that are invalid if split): dependency manifest + lockfile (`package.json` + `package-lock.json`, `pyproject.toml` + `poetry.lock`, etc.), and generated files that must stay in sync with their source. Explain the exception in the commit body.
+   Types: `feat`, `fix`, `test`, `refactor`, `docs`, `style`, `perf`, `chore`, `ci`, `security`.
+4. **Order within a change:** implementation commit first, then its test commit, only if the implementation commit still passes the existing suite on its own. Otherwise, commit them together and say so in the body.
+5. Dependency manifests and their lockfiles are always committed together, as are generated files and their sources.
 6. Never commit: secrets, `.env` files, credentials, build artifacts, `node_modules`, `__pycache__`, IDE settings, or large binaries.
 7. Never `git push --force` to shared branches, rewrite published history, or push without being asked.
-8. Work on a feature branch (`feat/<short-name>`, `fix/<short-name>`) — never commit directly to `main`/`master` unless instructed.
+8. Work on a feature branch (`feat/<short-name>`, `fix/<short-name>`). Never commit directly to `main`/`master` unless instructed.
 
 ### Pull Request Rules
-1. **When to open:** Push the feature branch and open a Pull Request (using `gh pr create --base main --head <branch>`) only after all tests, linters, and build checks pass, and when requested or authorized by the user.
-2. **PR Title:** Must follow **Conventional Commits** in English (`<type>(<scope>): <short imperative summary>`).
-3. **PR Description:** Must be written in English, strictly technical (no emojis, no marketing clichés), and structured with three sections:
-   - `## Summary` — Concise explanation of *what* was implemented or fixed and *why*.
-   - `## Key Changes` — Bulleted breakdown of architectural and file-level changes grouped by module.
-   - `## Verification` — Exact test, typecheck, lint, and build commands executed along with their pass results.
+1. **When to open:** only when requested or authorized by the user, and after tests, linters, and build checks pass. Requires `gh` installed and authenticated; if it is not, report that instead of working around it.
+2. **Command:** `gh pr create --base main --head <branch>`.
+3. **Title:** Conventional Commits format, in English.
+4. **Description:** in English, strictly technical (no emojis, no marketing language), with three sections:
+   - `## Summary` — what was implemented or fixed, and why.
+   - `## Key Changes` — bulleted breakdown grouped by module.
+   - `## Verification` — exact test, typecheck, lint, and build commands run, with results.
 
 ---
 
-## 3. Testing — Every New Function Has a Test
+## 3. Testing
 
-**Every new function, method, or endpoint must ship with at least one automated test.** Modified functions must have their tests updated.
+**Every new function, method, or endpoint ships with at least one automated test.** Modified functions must have their tests updated.
 
-### Framework by language
 Use the framework already in the project. If none exists, default to:
 
 | Language              | Framework                          | Test file convention                  |
 |-----------------------|------------------------------------|---------------------------------------|
-| JavaScript/TypeScript | **Jest** (or Vitest if Vite-based) | `*.test.ts` / `*.spec.ts` next to source or in `__tests__/` |
+| JavaScript/TypeScript | Jest (Vitest if Vite-based)        | `*.test.ts` / `*.spec.ts`             |
 | React components      | Jest + React Testing Library       | `Component.test.tsx`                  |
-| Python                | **pytest**                         | `tests/test_<module>.py`              |
-| Java                  | **JUnit 5** + Mockito              | `src/test/java/.../<Class>Test.java`  |
-| C# / .NET             | **xUnit** (+ Moq / NSubstitute)    | `<Project>.Tests/<Class>Tests.cs`     |
+| Python                | pytest                             | `tests/test_<module>.py`              |
+| Java                  | JUnit 5 + Mockito                  | `src/test/java/.../<Class>Test.java`  |
+| C# / .NET             | xUnit (+ Moq / NSubstitute)        | `<Project>.Tests/<Class>Tests.cs`     |
 | Go                    | `testing` package                  | `<file>_test.go`                      |
 
-### What a test must cover
-- **Happy path** — expected input produces expected output.
-- **Edge cases** — empty, null/undefined, boundaries, large inputs.
-- **Error cases** — invalid input throws/returns the correct error.
-- **Security cases for APIs** — unauthenticated (401), unauthorized (403), rate-limited (429), invalid payload (400/422).
+### Coverage of each test set
+- Happy path, edge cases (empty, null, boundaries), and error cases.
+- For API endpoints: 400/422 (invalid payload), 401 (unauthenticated), 403 (unauthorized), 429 (rate-limited).
 
-### Test quality rules
-- Follow **Arrange → Act → Assert**.
-- One behavior per test; descriptive names: `should return 401 when token is missing`.
-- Tests must be **deterministic and isolated** — mock network, time, filesystem, and external services.
+### Quality rules
+- Arrange, Act, Assert. One behavior per test, with a descriptive name (`should return 401 when token is missing`).
+- Deterministic and isolated: mock network, time, filesystem, and external services.
 - Never delete, skip (`.skip`, `@Disabled`, `@pytest.mark.skip`), or weaken a failing test to make it pass. Fix the code, or ask.
-- Run the full test suite before committing. Do not lower coverage thresholds.
+- Do not lower coverage thresholds.
+- **If tests already fail before your change,** do not fix them as a side effect. Record which tests fail, proceed with your task, and report the pre-existing failures.
 
 ---
 
-## 4. API Security — No Unprotected Endpoints
+## 4. API Security (applies only to code that exposes an HTTP API)
 
-**Every API endpoint must be protected against unauthorized and abusive requests.** Public endpoints must be explicitly justified and still rate-limited.
+Every endpoint must be protected. Public endpoints must be explicitly justified and still rate-limited. Use the project's existing libraries for each item below.
 
-### 4.1 Authentication
-- Require authentication on all endpoints by default (deny-by-default); mark public routes explicitly.
-- Use standard headers: `Authorization: Bearer <token>` (JWT/OAuth2) or `X-API-Key` for service-to-service.
-- Validate tokens on every request: signature, expiration (`exp`), issuer (`iss`), audience (`aud`).
-- Use short-lived access tokens + refresh tokens. Store tokens in `HttpOnly`, `Secure`, `SameSite` cookies on the web — never in `localStorage`.
-- Hash passwords with **bcrypt / argon2** — never plain text or fast hashes (MD5/SHA1).
-
-### 4.2 Authorization
-- Check **permissions per resource**, not just "is logged in" (prevent IDOR: user A must not access user B's data).
-- Apply least privilege / role-based access control.
-
-### 4.3 Rate Limiting & Abuse Protection
-- Apply rate limits to all endpoints; stricter limits on auth endpoints (login, signup, password reset, OTP).
-  - Node: `express-rate-limit` / `@nestjs/throttler`
-  - Python: `slowapi` (FastAPI) / `django-ratelimit` / `Flask-Limiter`
-  - Java: Bucket4j / Resilience4j
-  - .NET: built-in `Microsoft.AspNetCore.RateLimiting`
-- Return `429 Too Many Requests` with a `Retry-After` header.
-- Limit request body size and pagination size (`limit` max, e.g. 100).
-- Set request timeouts.
-
-### 4.4 Input & Output
-- **Validate all input** with a schema (Zod, Joi, Pydantic, Bean Validation, FluentValidation). Reject unknown fields.
-- Use parameterized queries / ORM — never string-concatenated SQL.
-- Never return stack traces, internal errors, or sensitive fields (passwords, tokens, internal IDs) in responses.
-- Use correct status codes: `400`, `401`, `403`, `404`, `422`, `429`, `500`.
-
-### 4.5 Transport & Headers
-- HTTPS only in production.
-- Configure **CORS** with an explicit allow-list of origins — never `*` with credentials.
-- Set security headers (Helmet in Node, or equivalent): `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`.
-
-### 4.6 Secrets
-- Secrets come from environment variables or a secrets manager — **never hardcoded**.
-- Keep a committed `.env.example` with placeholder values; `.env` stays in `.gitignore`.
-- If you spot a leaked secret, stop and alert the user.
+- **Authentication:** deny by default; mark public routes explicitly. Validate token signature, `exp`, `iss`, and `aud` on every request. On the web, keep tokens in `HttpOnly`, `Secure`, `SameSite` cookies, never in `localStorage`. Hash passwords with bcrypt or argon2.
+- **Authorization:** check permissions per resource, not just "is logged in" (prevent IDOR). Apply least privilege.
+- **Rate limiting:** apply to all endpoints, stricter on auth routes (login, signup, password reset, OTP). Return `429` with `Retry-After`. Cap request body size and page size, and set request timeouts.
+- **Input and output:** validate all input with a schema and reject unknown fields. Use parameterized queries or an ORM. Never return stack traces, internal errors, or sensitive fields. Use correct status codes (`400`, `401`, `403`, `404`, `422`, `429`, `500`).
+- **Transport:** HTTPS only in production. CORS with an explicit origin allow-list (never `*` with credentials). Set `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, and `Content-Security-Policy`.
+- **Secrets:** from environment variables or a secrets manager, never hardcoded. Keep a committed `.env.example` with placeholders; `.env` stays in `.gitignore`. If you find a leaked secret, stop and alert the user.
 
 ---
 
 ## 5. Code Quality
 
-- **Readable over clever.** Descriptive names, small single-purpose functions (aim < 40 lines).
+- **Readable over clever.** Descriptive names and small, single-purpose functions.
 - **Type everything** where the language supports it (TypeScript `strict`, Python type hints, no `any` without justification).
-- **Handle errors explicitly.** No empty `catch` blocks; no swallowed exceptions.
-- **No dead code**, commented-out code, or leftover `console.log` / `print` debugging.
-- **DRY, but not prematurely.** Extract duplication after it appears the third time.
-- **Comments only when necessary (KISS).** Prefer self-explanatory code (clear names, small functions) over comments. Comment the *why* (business rules, workarounds, non-obvious decisions) — never restate *what* the code does.
-- **All comments, docstrings, commit messages, and identifiers must be in English.**
-- Document public functions with JSDoc / docstrings / XML docs: purpose, params, return, errors thrown.
-- Run the project's linter and formatter (ESLint/Prettier, Ruff/Black, Checkstyle, `dotnet format`) before committing.
+- **Handle errors explicitly.** No empty `catch` blocks or swallowed exceptions.
+- **No dead code**, commented-out code, or leftover debug output (`console.log`, `print`).
+- **Comments explain why, not what.** Use them for business rules, workarounds, and non-obvious decisions. Internal code needs no docstrings.
+- **Public API docs.** Exported or public functions get JSDoc/docstring/XML docs covering purpose, params, return, and errors thrown.
+- **Language:** comments, docstrings, commit messages, and identifiers are in English. The only exception is the pt-BR section of `README.md` (Section 6).
+- Run the project's linter and formatter before committing.
 
 ---
 
 ## 6. Documentation & README Standards
 
-Project documentation must be written as sober, technical engineering reference material.
+Project documentation is sober, technical engineering reference material.
 
-### 6.1 Language Policy (Single-File Bilingual: EN-US Top + PT-BR Bottom)
-- **Single `README.md` file:** Do not create separate language files (such as `README.pt-BR.md`). Keep both languages inside `README.md`.
-- **Top Section (`en-US` Default):** The file starts with `<a id="en-us"></a>`, the project title, a language anchor link (`Language: **English (en-US)** | [Português (pt-BR)](#pt-br)`), and the full documentation in **English (`en-US`)**.
-- **Bottom Section (`pt-BR` Companion):** Separated by a horizontal rule (`---`), followed by `<a id="pt-br"></a>`, the project title, a back-to-top anchor link (`Idioma: [English (en-US)](#en-us) | **Português (pt-BR)**`), and the complete synchronized documentation in **Brazilian Portuguese (`pt-BR`)**.
+### 6.1 Language Policy (single file, en-US on top, pt-BR below)
+- Use a single `README.md`. Do not create separate language files such as `README.pt-BR.md`.
+- **Top section (en-US):** starts with `<a id="en-us"></a>`, the project title, the line `Language: **English (en-US)** | [Português (pt-BR)](#pt-br)`, then the full documentation in English.
+- **Bottom section (pt-BR):** after a horizontal rule (`---`), starts with `<a id="pt-br"></a>`, the project title, the line `Idioma: [English (en-US)](#en-us) | **Português (pt-BR)**`, then the complete, synchronized documentation in Brazilian Portuguese.
+- When you change one section, update the other in the same commit.
 
-### 6.2 Style & Anti-"AI-ification" Rules
-- **No emojis:** Never use emojis in headings, bullet points, tables, or prose inside `README.md`, `AGENTS.md`, or technical docs.
-- **No marketing fluff or AI clichés:** Avoid empty adjectives and promotional phrasing ("blazingly fast", "seamless", "cutting-edge", "robust", "modern", "effortless"). State facts, constraints, and behavior directly.
-- **High signal-to-noise ratio:** Prefer structured tables, exact file paths, and copy-pasteable shell commands over long narrative explanations.
+### 6.2 Style
+- No emojis in `README.md`, `AGENTS.md`, or technical docs.
+- No promotional language ("blazingly fast", "seamless", "cutting-edge", "robust", "modern", "effortless"). State facts, constraints, and behavior directly.
+- Prefer tables, exact file paths, and copy-pasteable commands over narrative.
 
-### 6.3 Required README Structure
-Both the `en-US` and `pt-BR` sections inside `README.md` must cover these subsections in order:
-1. **Title, Language Switcher & Overview:** Factual summary of what the system does and the problem it solves.
-2. **Tech Stack & Architecture:** Runtime, frameworks, libraries, and directory structure with module responsibilities.
-3. **Prerequisites & Environment Variables:** Required tool versions and a reference table documenting every variable in `.env.example` (Variable, Required, Default, Description).
-4. **Setup, Development & Verification Commands:** Exact commands for installation, local development, test execution, type checking, linting, and production build.
-5. **Database & API Specification (if applicable):** Migration files, schema overview, endpoints, authentication method, rate limits, and response status codes.
-6. **Deployment:** Concrete steps required to deploy and configure the application in production.
+### 6.3 Required README structure (both languages, in order)
+1. **Title, language switcher, overview:** what the system does and the problem it solves.
+2. **Tech stack and architecture:** runtime, frameworks, libraries, directory structure with module responsibilities.
+3. **Prerequisites and environment variables:** required tool versions, and a table covering every variable in `.env.example` (Variable, Required, Default, Description).
+4. **Setup, development, and verification commands:** install, run locally, test, typecheck, lint, production build.
+5. **Database and API specification (if applicable):** migrations, schema overview, endpoints, authentication, rate limits, status codes.
+6. **Deployment:** concrete production deploy and configuration steps.
 
 ---
 
 ## 7. Dependencies
 
 - Prefer the standard library and existing dependencies.
-- Before adding a package: confirm it is maintained, widely used, and license-compatible — and ask the user.
-- Pin versions via lockfiles. Run `npm audit` / `pip-audit` / equivalent after adding dependencies.
+- Before adding a package, confirm it is maintained, widely used, and license-compatible, and ask the user.
+- Keep versions pinned through the lockfile. Run `npm audit`, `pip-audit`, or the equivalent after adding dependencies.
 
 ---
 
 ## 8. Agent Workflow
 
-1. **Explore** — read related files, tests, and project-level `AGENTS.md` / README.
-2. **Plan** — for non-trivial tasks, outline the steps and affected files before coding.
-3. **Implement** — make the change following the rules above.
-4. **Test** — write/update tests; run the full suite, linter, and type checker.
-5. **Commit** — one file per commit, Conventional Commit messages.
-6. **Report** — summarize what changed, what was tested, and any open questions or follow-ups.
+1. **Explore:** read related files, tests, and the project-level `AGENTS.md` and README.
+2. **Plan:** for non-trivial tasks, outline steps and affected files before coding.
+3. **Implement:** follow the rules above.
+4. **Verify:** write or update tests, then run the full suite, linter, and type checker.
+5. **Commit:** one logical change per commit, Conventional Commit messages.
+6. **Report:** summarize what changed, what was tested, pre-existing failures, and open questions.
+
+### Finding verification commands
+Use the commands documented in the project's `AGENTS.md` or README. If none are documented, read the build manifest (`package.json` scripts, `Makefile`, `pyproject.toml`, `pom.xml`, `*.csproj`) and propose the commands to the user before running anything that is not a plain test, lint, or build command.
 
 ### Never do without explicit permission
 - Delete files or directories outside the task scope.
@@ -206,10 +159,10 @@ Both the `en-US` and `pt-BR` sections inside `README.md` must cover these subsec
 ## 9. Project-Specific Overrides
 
 Each project should provide its own `AGENTS.md` with:
-- **Stack & versions** (e.g. Node 20, Next.js 15, Python 3.12, Java 21, .NET 8)
-- **Setup / build / test / lint commands**
-- **Folder structure** and architecture notes
-- **Project-specific conventions** that differ from this file
+- Stack and versions (e.g. Node 20, Next.js 15, Python 3.12, Java 21, .NET 8)
+- Install, build, test, and lint commands
+- Folder structure and architecture notes
+- Conventions that differ from this file
 
 Example:
 ```markdown
