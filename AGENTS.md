@@ -34,11 +34,11 @@ Global instructions for AI coding agents working in any project under this direc
 4. **Order within a change:** implementation commit first, then its test commit, only if the implementation commit still passes the existing suite on its own. Otherwise, commit them together and say so in the body.
 5. Dependency manifests and their lockfiles are always committed together, as are generated files and their sources.
 6. Never commit: secrets, `.env` files, credentials, build artifacts, `node_modules`, `__pycache__`, IDE settings, or large binaries.
-7. Never `git push --force` to shared branches, rewrite published history, or push without being asked.
+7. Never `git push --force` to shared branches or rewrite published history. Push the feature branch to `origin` once all verification checks pass.
 8. Work on a feature branch (`feat/<short-name>`, `fix/<short-name>`). Never commit directly to `main`/`master` unless instructed.
 
 ### Pull Request Rules
-1. **When to open:** only when requested or authorized by the user, and after tests, linters, and build checks pass. Requires `gh` installed and authenticated; if it is not, report that instead of working around it.
+1. **When to open:** automatically after all commits for the task are complete and tests, linters, and build checks pass. Requires `gh` installed and authenticated; if it is not, report that instead of working around it.
 2. **Command:** `gh pr create --base main --head <branch>`.
 3. **Title:** Conventional Commits format, in English.
 4. **Description:** in English, strictly technical (no emojis, no marketing language), with three sections:
@@ -141,7 +141,7 @@ Project documentation is sober, technical engineering reference material.
 2. **Plan:** for non-trivial tasks, outline steps and affected files before coding.
 3. **Implement:** follow the rules above.
 4. **Verify:** write or update tests, then run the full suite, linter, and type checker.
-5. **Commit:** one logical change per commit, Conventional Commit messages.
+5. **Commit & PR:** one logical change per commit using Conventional Commits, then push the feature branch and open a Pull Request.
 6. **Report:** summarize what changed, what was tested, pre-existing failures, and open questions.
 
 ### Finding verification commands
